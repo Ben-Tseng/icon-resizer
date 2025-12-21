@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Dimension Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f4f7f6; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .preview-area { margin-top: 20px; border: 2px dashed #ccc; min-height: 200px; display: flex; justify-content: center; align-items: center; overflow: hidden; background-color: #fafafa; }
+        canvas { max-width: 100%; height: auto; display: none; box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: white; font-weight: bold; transition: background 0.3s; }
+        button:hover { background: #0056b3; }
+        .download-btn { background: #28a745; display: none; }
+        .download-btn:hover { background: #218838; }
+        input[type="number"] { width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        input[type="file"] { border: 1px solid #ddd; padding: 5px; border-radius: 4px; background: #fff; }
+        label { font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🖼️ Image Dimension Manager</h2>
+    
+    <div class="controls">
+        <input type="file" id="upload" accept="image/*">
+        
+        <label>Presets:</label>
+        <button onclick="setSize(1280, 800)">1280x800</button>
+        <button onclick="setSize(640, 400)">640x400</button>
+        
+        <div>
+            W: <input type="number" id="width" value="1280"> 
+            H: <input type="number" id="height" value="800">
+        </div>
+        
+        <button onclick="processImage()">Apply Changes</button>
+    </div>
+
+    <div class="preview-area" id="previewBox">
+        <p id="status">Upload an image and set dimensions to start</p>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <button id="downloadBtn" class="download-btn" onclick="downloadImage()">Download Resized Image</button>
+    </div>
+</div>
+
+<script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
+
+    function setSize(w, h) {
+        document.getElementById('width').value = w;
+        document.getElementById('height').value = h;
+    }
+
+    function processImage() {
+        const file = upload.files[0];
+        if (!file) {
+            alert("Please select an image file first.");
+            return;
+        }
+
+        const targetW = parseInt(document.getElementById('width').value);
+        const targetH = parseInt(document.getElementById('height').value);
+
+        if (isNaN(targetW) || isNaN(targetH)) {
+            alert("Please enter valid width and height values.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Set canvas dimensions
+                canvas.width = targetW;
+                canvas.height = targetH;
+                
+                // Draw image (stretches to fill the target size)
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+                
+                // Update UI visibility
+                canvas.style.display = 'block';
+                status.style.display = 'none';
+                downloadBtn.style.display = 'inline-block';
+            }
+            img.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function downloadImage() {
+        const link = document.createElement('a');
+        const timestamp = new Date().getTime();
+        link.download = `resized_image_${timestamp}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+</script>
+
+</body>
+</html>
